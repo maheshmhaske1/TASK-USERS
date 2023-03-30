@@ -1,6 +1,7 @@
 const user = require('../model/userModel')
 const JWT = require('../middleware/auth')
 const { default: mongoose } = require('mongoose')
+var validator = require('validator');
 
 // Create user api
 exports.createUser = async (req, res) => {
@@ -10,6 +11,20 @@ exports.createUser = async (req, res) => {
         return res.json({
             status: false,
             message: "name,email,mobile,password are required fields"
+        })
+    }
+
+    if (!validator.isEmail(email)) {
+        return res.send({
+            status: false,
+            message: "please enter valid email"
+        })
+    }
+
+    if (mobile.length !== 10) {
+        return res.send({
+            status: false,
+            message: "please enter valid mobile number"
         })
     }
 
@@ -30,7 +45,7 @@ exports.createUser = async (req, res) => {
     await new user({
         name: name,
         email: email,
-        mobile: mobile,
+        mobile: `+91${mobile}`,
         password: password,
         token: ''
     })
@@ -96,6 +111,13 @@ exports.get = async (req, res) => {
         })
     }
 
+    const isUserExist = await user.findOne({ _id: id })
+    if (isUserExist == null) {
+        return res.json({
+            status: false,
+            message: "please provide valid userId"
+        })
+    }
 
     await user.findById({ _id: id })
         .then((success) => {
@@ -126,12 +148,27 @@ exports.update = async (req, res) => {
     }
 
     const isUserExist = await user.findOne({ _id: id })
-    if (!isUserExist) {
+    if (isUserExist == null) {
         return res.json({
             status: false,
             message: "please provide valid userId"
         })
     }
+
+    if (!validator.isEmail(email)) {
+        return res.send({
+            status: false,
+            message: "please enter valid email"
+        })
+    }
+
+    if (mobile.length !== 10) {
+        return res.send({
+            status: false,
+            message: "please enter valid mobile number"
+        })
+    }
+    
 
     await user.findOneAndUpdate(
         { _id: id },
@@ -171,8 +208,8 @@ exports.delete = async (req, res) => {
         })
     }
 
-    const isUserExist = await user.findById({ _id: id })
-    if (!isUserExist) {
+    const isUserExist = await user.findOne({ _id: id })
+    if (isUserExist == null) {
         return res.json({
             status: false,
             message: "please provide valid userId"
